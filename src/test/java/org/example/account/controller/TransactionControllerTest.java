@@ -2,6 +2,7 @@ package org.example.account.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.example.account.dto.CancelBalance;
 import org.example.account.dto.TransactionDto;
 import org.example.account.dto.UseBalance;
 import org.example.account.service.TransactionService;
@@ -64,5 +65,34 @@ class TransactionControllerTest {
                 .andExpect(jsonPath("$.amount").value(12345));
     }
     
-
+    @Test
+    void successCancelBalance() throws Exception {
+        // given
+        given(transactionService.cancelBalance(anyString(), anyString(), anyLong()))
+                .willReturn(TransactionDto.builder()
+                                    .accountNumber("1000000000")
+                                    .transactedAt(LocalDateTime.now())
+                                    .amount(54321L)
+                                    .transactionId("transactionIdForCancel")
+                                    .transactionResultType(
+                                            TransactionResultType.S)
+                                    .build());
+        
+        // when
+        // then
+        mockMvc.perform(post("/transaction/cancel")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(
+                                        new CancelBalance.Request(
+                                                "transactionId", "1000000000",
+                                                                  3000L
+                                        ))))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accountNumber").value("1000000000"))
+                .andExpect(jsonPath("$.transactionResult").value("S"))
+                .andExpect(jsonPath("$.transactionId").value(
+                        "transactionIdForCancel"))
+                .andExpect(jsonPath("$.amount").value(54321L));
+    }
 }
