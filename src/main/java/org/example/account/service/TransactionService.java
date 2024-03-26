@@ -144,6 +144,7 @@ public class TransactionService {
             throw new AccountException(ErrorCode.TOO_OLD_ORDER_TO_CANCEL);
         }
     }
+    
     @Transactional
     public void saveFailedCancelTransaction(String accountNumber, Long amount) {
         Account account = accountRepository.findByAccountNumber(accountNumber)
@@ -152,7 +153,16 @@ public class TransactionService {
         
         saveAndGetTransaction(
                 TransactionType.CANCEL, TransactionResultType.F, account,
-                amount);
+                amount
+        );
+    }
+    
+    public TransactionDto queryTransaction(String transactionId) {
+        return TransactionDto.fromEntity(
+                transactionRepository.findByTransactionId(
+                                transactionId)
+                        .orElseThrow(() -> new AccountException(
+                                ErrorCode.TRANSACTION_NOT_FOUND)));
     }
 }
 
