@@ -11,17 +11,22 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
-@Builder
 @AllArgsConstructor
-@NoArgsConstructor
-@Setter
-@Getter
+@Builder
 @Entity
 @EntityListeners(AuditingEntityListener.class)
+@Getter
+@NoArgsConstructor
+@Setter
 public class Account {
     @Id
     @GeneratedValue
     private Long id;
+    
+    @CreatedDate
+    private LocalDateTime createdAt;
+    @LastModifiedDate
+    private LocalDateTime updatedAt;
     
     @ManyToOne
     private AccountUser accountUser;
@@ -33,11 +38,6 @@ public class Account {
     
     private LocalDateTime registeredAt;
     private LocalDateTime unRegisteredAt;
-    
-    @CreatedDate
-    private LocalDateTime createdAt;
-    @LastModifiedDate
-    private LocalDateTime updatedAt;
     
     public void useBalance(Long amount) {
         if (amount > balance) {

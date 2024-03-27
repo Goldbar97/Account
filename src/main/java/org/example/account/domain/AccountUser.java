@@ -11,19 +11,19 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
-@Getter
-@Setter
 @AllArgsConstructor
-@NoArgsConstructor
 @Builder
 @Entity
 @EntityListeners(AuditingEntityListener.class)
+@Getter
+@NoArgsConstructor
+@Setter
 public class AccountUser {
+    private String name;
+    
     @Id
     @GeneratedValue
     private Long id;
-    
-    private String name;
     
     @CreatedDate
     private LocalDateTime createdAt;

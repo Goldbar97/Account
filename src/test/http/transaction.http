@@ -5,10 +5,20 @@ Content-Type: application/json
 {
   "userId": 1,
   "accountNumber": "1000000000",
-  "amount": 10000
+  "amount": 100
 }
 
-### calcel balance
+### use balance 2
+POST http://localhost:8080/transaction/use
+Content-Type: application/json
+
+{
+  "userId": 1,
+  "accountNumber": "1000000000",
+  "amount": 100
+}
+
+### cancel balance
 POST http://localhost:8080/transaction/cancel
 Content-Type: application/json
 

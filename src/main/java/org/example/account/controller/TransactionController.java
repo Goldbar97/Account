@@ -3,6 +3,7 @@ package org.example.account.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.account.aop.AccountLock;
 import org.example.account.dto.CancelBalance;
 import org.example.account.dto.QueryTransactionResponse;
 import org.example.account.dto.UseBalance;
@@ -22,27 +23,8 @@ import org.springframework.web.bind.annotation.*;
 public class TransactionController {
     private final TransactionService transactionService;
     
-    @PostMapping("/transaction/use")
-    public UseBalance.Response useBalance(
-            @Valid @RequestBody UseBalance.Request request) {
-        
-        try {
-            return UseBalance.Response.from(transactionService.useBalance(
-                    request.getUserId(),
-                    request.getAccountNumber(),
-                    request.getAmount()
-            ));
-        } catch (AccountException e) {
-            log.error(e.getErrorMessage());
-            
-            transactionService.saveFailedUseTransaction(
-                    request.getAccountNumber(), request.getAmount());
-            
-            throw e;
-        }
-    }
-    
     @PostMapping("/transaction/cancel")
+    @AccountLock
     public CancelBalance.Response cancelBalance(
             @Valid @RequestBody CancelBalance.Request request) {
         
@@ -67,5 +49,28 @@ public class TransactionController {
             @PathVariable String transactionId) {
         return QueryTransactionResponse.from(
                 transactionService.queryTransaction(transactionId));
+    }
+    
+    @PostMapping("/transaction/use")
+    @AccountLock
+    public UseBalance.Response useBalance(
+            @Valid @RequestBody UseBalance.Request request)
+            throws InterruptedException {
+        
+        try {
+            Thread.sleep(3000L);
+            return UseBalance.Response.from(transactionService.useBalance(
+                    request.getUserId(),
+                    request.getAccountNumber(),
+                    request.getAmount()
+            ));
+        } catch (AccountException e) {
+            log.error(e.getErrorMessage());
+            
+            transactionService.saveFailedUseTransaction(
+                    request.getAccountNumber(), request.getAmount());
+            
+            throw e;
+        }
     }
 }

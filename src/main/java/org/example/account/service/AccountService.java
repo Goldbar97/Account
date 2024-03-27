@@ -32,9 +32,7 @@ public class AccountService {
      */
     @Transactional
     public AccountDto createAccount(Long userId, Long initialBalance) {
-        AccountUser accountUser = accountUserRepository.findById(userId)
-                .orElseThrow(
-                        () -> new AccountException(ErrorCode.USER_NOT_FOUND));
+        AccountUser accountUser = getAccountUser(userId);
         
         validateCreateAccount(accountUser);
         
@@ -54,26 +52,14 @@ public class AccountService {
         ));
     }
     
-    private void validateCreateAccount(AccountUser accountUser) {
-        if (accountRepository.countByAccountUser(accountUser) == 10) {
-            throw new AccountException(ErrorCode.MAX_ACCOUNT_PER_USER_10);
-        }
-    }
-    
-    @Transactional
-    public Account getAccount(Long id) {
-        return accountRepository.findById(id).get();
-    }
-    
     @Transactional
     public AccountDto deleteAccount(Long userId, String accountNumber) {
-        AccountUser accountUser = accountUserRepository.findById(userId)
-                .orElseThrow(
-                        () -> new AccountException(ErrorCode.USER_NOT_FOUND));
+        AccountUser accountUser = getAccountUser(userId);
         
         Account account = accountRepository.findByAccountNumber(accountNumber)
                 .orElseThrow(
-                        () -> new AccountException(ErrorCode.ACCOUNT_NOT_FOUND));
+                        () -> new AccountException(
+                                ErrorCode.ACCOUNT_NOT_FOUND));
         
         validateDeleteAccount(accountUser, account);
         
@@ -83,7 +69,37 @@ public class AccountService {
         return AccountDto.fromEntity(account);
     }
     
-    private void validateDeleteAccount(AccountUser accountUser, Account account) {
+    private AccountUser getAccountUser(Long userId) {
+        AccountUser accountUser = accountUserRepository.findById(userId)
+                .orElseThrow(
+                        () -> new AccountException(ErrorCode.USER_NOT_FOUND));
+        return accountUser;
+    }
+    
+    @Transactional
+    public Account getAccount(Long id) {
+        return accountRepository.findById(id).get();
+    }
+    
+    @Transactional
+    public List<AccountDto> getAccountsByUserId(Long userId) {
+        AccountUser user = getAccountUser(userId);
+        
+        List<Account> accounts = accountRepository.findByAccountUser(user);
+        
+        return accounts.stream()
+                .map(AccountDto::fromEntity)
+                .collect(Collectors.toList());
+    }
+    
+    private void validateCreateAccount(AccountUser accountUser) {
+        if (accountRepository.countByAccountUser(accountUser) == 10) {
+            throw new AccountException(ErrorCode.MAX_ACCOUNT_PER_USER_10);
+        }
+    }
+    
+    private void validateDeleteAccount(
+            AccountUser accountUser, Account account) {
         if (!Objects.equals(
                 accountUser.getId(),
                 account.getAccountUser().getId()
@@ -98,18 +114,5 @@ public class AccountService {
         if (account.getBalance() > 0) {
             throw new AccountException(ErrorCode.BALANCE_NOT_EMPTY);
         }
-    }
-    
-    @Transactional
-    public List<AccountDto> getAccountsByUserId(Long userId) {
-        AccountUser user = accountUserRepository.findById(userId)
-                .orElseThrow(
-                        () -> new AccountException(ErrorCode.USER_NOT_FOUND));
-        
-        List<Account> accounts = accountRepository.findByAccountUser(user);
-        
-        return accounts.stream()
-                .map(AccountDto::fromEntity)
-                .collect(Collectors.toList());
     }
 }
